@@ -1,13 +1,11 @@
 # import our dear libraries
+
 from pages import *
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasAgg, NavigationToolbar2Tk
 import tkinter as tk
 import numpy as np
 import os
 
-import matplotlib
-matplotlib.use("TkAgg")
+
 
 
 LARGE_FONT = ("Verdana", 12)
@@ -26,15 +24,14 @@ class SignalSandbox(tk.Tk):
 
         self.frames = {}
 
-        frame = StartPage(container, self)
+        for i in (StartPage,SinusoidPlayground):
+            frame = i(container,self)
+            self.frames[i] = frame
+            frame.grid(row = 0, column=0,sticky = "nsew")
 
-        self.frames[StartPage] = frame
+        self.showFrame(StartPage)
 
-        frame.grid(row=0, column=0, sticky="nsew")
-
-        self.show_frame(StartPage)
-
-    def show_frame(self, cont):
+    def showFrame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()
 
