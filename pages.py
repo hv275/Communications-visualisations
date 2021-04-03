@@ -25,29 +25,31 @@ class SinusoidPlayground(tk.Frame):
 
         returnButton = ttk.Button(self, text = "Return home", command = lambda: controller.showFrame(StartPage))
         returnButton.pack()
-
+        #todo fix entry box to show where I want it
         freqEntry = tk.Entry()
         freqEntry.pack()
 
         plotSinusoid = ttk.Button(self,text = "Plot a sin wave", command = lambda: self.plotWave(int(freqEntry.get()),1))
         plotSinusoid.pack()
 
+        #todo, create an ability to stack waves
         self.fig = Figure(figsize=(5,5),dpi = 100)
         self.a = self.fig.add_subplot(111)
-
+        self.canvas = FigureCanvasTkAgg(self.fig,self)
+        self.canvas._tkcanvas.pack(side = tk.TOP,fill = tk.BOTH,expand = True)
+        self.toolbar = NavigationToolbar2Tk(self.canvas,self)
+        self.toolbar.update()
+        
 
 
     def plotWave(self,freq,end):
+        self.a.cla()
         t,vals = sinosc(freq,end)
         self.a.plot(t,vals)
+        self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill = tk.BOTH,expand = True)
+        self.canvas.draw()
 
-        canvas = FigureCanvasTkAgg(self.fig,self)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side=tk.BOTTOM, fill = tk.BOTH,expand = True)
 
-        toolbar = NavigationToolbar2Tk(canvas,self)
-        toolbar.update()
-        canvas._tkcanvas.pack(side = tk.TOP,fill = tk.BOTH,expand = True)
 
 
 
