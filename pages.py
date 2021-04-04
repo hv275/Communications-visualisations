@@ -3,6 +3,7 @@ from tkinter import ttk
 import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+import scipy.io.wavfile as wv
 from oscillators import *
 import numpy as np
 matplotlib.use("TkAgg")
@@ -31,12 +32,20 @@ class SinusoidPlayground(tk.Frame):
         returnButton.pack()
         #todo fix entry box to show where I want it
         freqEntry = tk.Entry(self)
+        freqLabel = tk.Label(self,text = "Frequency")
+        freqLabel.pack()
         freqEntry.pack()
 
-        plotSinusoid = ttk.Button(self,text = "Plot a sin wave", command = lambda: self.plotWave(int(freqEntry.get()),1))
+        magEntry = tk.Entry(self)
+        magEntry.insert(0,"1")
+        magLabel = tk.Label(self,text = "Magnitude")
+        magLabel.pack()
+        magEntry.pack()
+
+        plotSinusoid = ttk.Button(self,text = "Plot a sin wave", command = lambda: self.plotWave(float(freqEntry.get()),1,float(magEntry.get())))
         plotSinusoid.pack()
 
-        addSinusoid = ttk.Button(self,text = "Superpose a sin wave", command = lambda: self.superposeWave(int(freqEntry.get())))
+        addSinusoid = ttk.Button(self,text = "Superpose a sin wave", command = lambda: self.superposeWave(float(freqEntry.get()),float(magEntry.get())))
         addSinusoid.pack()
 
         showFFT = ttk.Button(self, text = "Show Fourier Transform of a Signal", command = lambda: self.showFourierTransform())
@@ -59,9 +68,9 @@ class SinusoidPlayground(tk.Frame):
         
 
 
-    def plotWave(self,freq,end):
+    def plotWave(self,freq,end,mag):
         self.a.cla()
-        self.cache["times"],self.cache["wave"] = sinosc(freq,end)
+        self.cache["times"],self.cache["wave"] = sinosc(freq,end,mag)
         self.cache["dur"] = end
         self.a.plot(self.cache["times"],self.cache["wave"])
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill = tk.BOTH,expand = True)
@@ -69,9 +78,9 @@ class SinusoidPlayground(tk.Frame):
 
     #todo, live nyquist frequency modification
     #fft works for now
-    def superposeWave(self,freq):
+    def superposeWave(self,freq,mag):
         self.a.cla()
-        _,vals = sinosc(freq,self.cache["dur"])
+        _,vals = sinosc(freq,self.cache["dur"],mag)
         self.cache["wave"]+=vals
         self.a.plot(self.cache["times"],self.cache["wave"])
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill = tk.BOTH,expand = True)
@@ -99,6 +108,40 @@ class TrackTransform(tk.Frame):
         label.pack(pady = 10, padx = 10)
         returnButton = ttk.Button(self, text = "Return home", command = lambda: controller.showFrame(StartPage))
         returnButton.pack()
+        choiceButton = ttk.Button(self,text = "Choose file to transform", command = self.openFile)
+        choiceButton.pack()
+
+    
+    def openFile(self):
+        self.file = tk.filedialog.askopenfilename(filetypes=(("Wav files",".wav"),("All files","*.*")))
+        self.fig = Figure(figsize=(5,5),dpi = 100)
+        self.a = self.fig.add_subplot(211)
+        self.a.title.set_text("Signal")
+        self.fft = self.fig.add_subplot(212)
+        self.fft.title.set_text("Frequencies")
+        self.fig.tight_layout()
+        self.canvas = FigureCanvasTkAgg(self.fig,self)
+        self.canvas._tkcanvas.pack(side = tk.TOP,fill = tk.BOTH,expand = True)
+        self.toolbar = NavigationToolbar2Tk(self.canvas,self)
+        self.toolbar.update()
+
+        fs, signal = wv.read(self.file)
+        #just using one channel as I cba converting stereo to mono without it sounding like ass
+        signal = signal[:,0]
+        t = [i/fs for i in range(signal.size)]
+        self.a.plot(t,signal)
+
+        fftvals = np.fft.fft(signal)
+        N = fftvals.size
+        bins = np.arange(0,N)*fs/N
+        #I am essentially throwing away the second half of the transform, as it is a repeat
+        #fftvals,_ = np.array_split(np.trim_zeros(fftvals,"b"),2)
+        #bins,_ = np.array_split(np.trim_zeros(bins,"b"),2)
+        self.fft.plot(bins,np.abs(fftvals))
+        self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill = tk.BOTH,expand = True)
+        self.canvas.draw()
+
+
 
 
 
@@ -110,4 +153,7 @@ class GraphPage(tk.Frame):
         label = tk.Label(self, text = "Graph Page", font = LARGE_FONT)
         label.pack(pady=10,padx=10)
         button1 = ttk.Button(self,text = "Back to home", command = lambda: controller.show_frame(StartPage))
+
+        
+
 
