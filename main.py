@@ -5,7 +5,9 @@ import tkinter as tk
 import numpy as np
 import os
 
-
+#honestly, it would have been easier to write a web app for this but I cba dealing with html and flask
+#like plotly would have been greate but that is not the point
+#
 
 
 LARGE_FONT = ("Verdana", 12)
@@ -24,7 +26,7 @@ class SignalSandbox(tk.Tk):
 
         self.frames = {}
 
-        for i in (StartPage,SinusoidPlayground):
+        for i in (StartPage,SinusoidPlayground,TrackTransform):
             frame = i(container,self)
             self.frames[i] = frame
             frame.grid(row = 0, column=0,sticky = "nsew")
