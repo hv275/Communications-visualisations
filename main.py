@@ -26,7 +26,7 @@ class SignalSandbox(tk.Tk):
 
         self.frames = {}
 
-        for i in (StartPage,SinusoidPlayground,TrackTransform):
+        for i in (StartPage,SinusoidPlayground,TrackTransform,ModulationPage):
             frame = i(container,self)
             self.frames[i] = frame
             frame.grid(row = 0, column=0,sticky = "nsew")
